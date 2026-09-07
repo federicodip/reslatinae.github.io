@@ -4,11 +4,9 @@ Stand: 7. September 2026, nach Ihren Änderungen vom 6. September und deren Zusa
 
 Dieses Dokument ändert keine Logik. Es sammelt Widersprüche und Beobachtungen aus dem KI-Prompt, den Label-Listen und der Schülerseite und macht Vorschläge. Alle Entscheidungen zur Grammatik liegen bei Ihnen; die Vorschläge sind als Diskussionsgrundlage gedacht.
 
-Die meisten Punkte der ersten Fassung sind inzwischen erledigt — die beiden wichtigsten haben Sie selbst gelöst (feste Klammer-Labels für alle Stufen, `cum` aus der Präpositionsliste). Abschnitt 5 hält fest, was umgesetzt wurde. Offen sind noch drei Punkte:
+Die Punkte der ersten Fassung sind inzwischen erledigt — die beiden wichtigsten haben Sie selbst gelöst (feste Klammer-Labels für alle Stufen, `cum` aus der Präpositionsliste). Abschnitt 4 hält fest, was umgesetzt wurde.
 
-1. Der Beispielsatz im Prompt zeigt Partizipien als „Prädikat“ ohne Klammer (Abschnitt 2.1).
-2. Die bereits veröffentlichten Übungen bieten weiterhin „Adverb“ an, die Anwendung erzeugt jetzt „Adverbiale Bestimmung“ (Abschnitt 2.2).
-3. Beim Export landen alle Labels der Palette im Antwortmenü der Schülerseite, auch unbenutzte (Abschnitt 4).
+Offen ist nur noch eine Frage: ob der Prompt zusätzlich ein Beispiel für eine Partizipialkonstruktion mit Klammer enthalten soll (Abschnitt 2).
 
 ---
 
@@ -30,7 +28,7 @@ Tatsächliche Verwendung der Labels in den veröffentlichten Übungen (Anzahl ma
 | Wort-Label | Anzahl | | Klammer-Label | Anzahl |
 |---|---|---|---|---|
 | Prädikat | 303 | | Nebensatz | 88 |
-| Adverb | 182 | | Relativsatz | 43 |
+| Adverbiale Bestimmung | 178 | | Relativsatz | 43 |
 | Akkusativobjekt | 179 | | AcI/NcI | 32 |
 | Subjekt | 177 | | Partizipialkonstruktion | 9 |
 | Präpositionale Bestimmung | 138 | | Infinitiv | 4 |
@@ -51,21 +49,13 @@ Die Genitiv-Unterstreichung (`"u": true`) kommt weiterhin nur in „pro Caelio 2
 
 ---
 
-## 2. Offene Widersprüche
-
-### 2.1 Partizipien im Beispiel sind „Prädikat“ ohne Klammer
+## 2. Offene Frage: Partizipien im Beispiel
 
 Im Beispielsatz des Prompts ist `sumitur` als „Prädikat“ markiert, und in der früheren Fassung waren es die Partizipien `sumptum` und `quaesitum` (elliptisch, „est“ fehlt), ohne Klammer „Partizipialkonstruktion“, obwohl Regel 7 solche Konstruktionen als Gruppen vorsieht. Für die Cicero-Stelle ist das vertretbar; das Modell verallgemeinert aber gern: Partizip → Prädikat.
 
 Ihr neuer Beispielsatz („Aurum Metelli sumitur a Clodia …“) entschärft das bereits, weil er finite Formen verwendet. Es bleibt die Frage, ob der Prompt zusätzlich ein Beispiel für eine echte Partizipialkonstruktion mit Klammer enthalten soll — dann sieht das Modell einmal, wie eine solche Gruppe aussieht.
 
 Vorschlag: so lassen, bis sich zeigt, dass Partizipialkonstruktionen tatsächlich zu selten erkannt werden. Ein zusätzliches Beispiel verlängert jeden Aufruf.
-
-### 2.2 „Adverb“ in den alten Übungen, „Adverbiale Bestimmung“ in der Anwendung
-
-Sie haben das Label im Deutschen in „Adverbiale Bestimmung“ umbenannt. Die 15 bereits veröffentlichten Übungen wurden dabei nicht mit umbenannt: dort steht 182-mal „Adverb“, sowohl als hinterlegte Antwort als auch im Antwortmenü. Wer eine alte und eine neue Übung nacheinander bearbeitet, sieht für dieselbe Sache zwei Namen — genau die Uneinheitlichkeit, die die Umbenennung beseitigen sollte (wie zuvor bei „Verb“ / „Prädikat“).
-
-Vorschlag: Die deutschen Übungen mit umbenennen. Das ist derselbe rein mechanische Vorgang, der für „Verb“ → „Prädikat“ und „AcI“ → „AcI/NcI“ bereits durchgeführt und geprüft wurde: nur die Label-Namen werden ersetzt, Text und Analyse bleiben unangetastet. Die englische Beispielseite behält „Adverb“. Aufwand: wenige Minuten, danach werden alle Übungen erneut im Browser geprüft.
 
 ---
 
@@ -80,15 +70,7 @@ Diese Punkte haben Sie bereits kommentiert; sie stehen hier nur noch als Zusamme
 
 ---
 
-## 4. Frage zur Schülerseite
-
-- **Alle Palettenlabels im Antwortmenü.** Beim Export landen alle Labels der Palette im Menü der Schülerseite, auch unbenutzte Hilfslabels; in „pro Caelio 26“ stehen deshalb „1“ und „2“ zur Auswahl. Vorschlag: nur die im Text tatsächlich verwendeten Labels exportieren, plus eine feste Menge an Ablenkern, damit die Auswahl nicht die Lösung verrät.
-
-Die beiden anderen Fragen dieses Abschnitts (Prüfungsmodus ohne Ende, asymmetrische Punktevergabe) haben Sie mit dem Knopf „Prüfung abgeben“ und der neuen Punktzählung gelöst; siehe Abschnitt 5.
-
----
-
-## 5. Bereits umgesetzt
+## 4. Bereits umgesetzt
 
 ### Von Ihnen entschieden und umgesetzt (6. September)
 
@@ -104,6 +86,12 @@ Die beiden anderen Fragen dieses Abschnitts (Prüfungsmodus ohne Ende, asymmetri
 - Ihre Genitiv-Rettung prüfte das bereits normalisierte Label; in der API-Fassung wird „Genitivattribut“ vorher zu „Sonstiges“, deshalb prüft sie jetzt die Roh-Antwort der KI.
 - Im deutschen Beispiel stand `quaesitum`, im Beispielsatz aber `quaeritur`. Korrigiert; ein Test vergleicht jetzt Beispielsatz und Beispielanalyse Wort für Wort.
 - Das englische „Adverb“ hatte durch die Umbenennung seine Farbe verloren und hat sie wieder.
+
+### Danach ergänzt
+
+- **„Adverb“ auch in den alten Übungen umbenannt.** Die 15 veröffentlichten Übungen sagen im Deutschen jetzt ebenfalls „Adverbiale Bestimmung“ (178 Stellen); die englische Beispielseite behält „Adverb“.
+- **Keine unbenutzten Labels mehr im Antwortmenü.** Beim Export enthält das Menü die Standard-Labels der Stufe, die festen Klammer-Labels und jedes Label, das tatsächlich verwendet wurde. Hilfslabels, die beim Arbeiten angelegt, aber nie benutzt wurden, entfallen; die beiden Einträge „1“ und „2“ sind auch aus „pro Caelio 26“ entfernt.
+- **Farbtabellen der Übungen repariert.** Bei der früheren Umbenennung „Verb“ → „Prädikat“ war in der englischen Beispielseite auch der Schlüssel in der Farbtabelle umbenannt worden, sodass deren zehn „Verb“-Antworten ohne Hintergrundfarbe blieben. Jede Übung enthält jetzt für jedes verwendete Label einen Eintrag in ihrer Farb-, Abkürzungs- und Übersetzungstabelle; ein Test prüft das.
 
 ### Vorher als Programmfehler behoben
 
