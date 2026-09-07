@@ -25,10 +25,27 @@
         },
         de: {
             beginner: ['Subjekt', 'Prädikat', 'Akkusativobjekt', 'Dativobjekt', 'Genitivobjekt', 'Ablativ', 'Präpositionale Bestimmung', 'Vokativ', 'Sonstiges'],
-            intermediate: ['Subjekt', 'Prädikat', 'Akkusativobjekt', 'Dativobjekt', 'Genitivobjekt', 'Ablativ', 'Prädikativum', 'Präpositionale Bestimmung', 'Adverb', 'Infinitiv', 'Relativsatz', 'Nebensatz', 'Konjunktion', 'Subjunktion', 'Vokativ', 'Sonstiges'],
-            advanced: ['Subjekt', 'Prädikat', 'Akkusativobjekt', 'Dativobjekt', 'Genitivobjekt', 'Ablativ', 'Ablativus absolutus', 'Prädikativum', 'Präpositionale Bestimmung', 'Adverb', 'Infinitiv', 'AcI/NcI', 'Partizipialkonstruktion', 'Relativsatz', 'Nebensatz', 'Konjunktion', 'Subjunktion', 'Vokativ', 'Sonstiges']
+            intermediate: ['Subjekt', 'Prädikat', 'Akkusativobjekt', 'Dativobjekt', 'Genitivobjekt', 'Ablativ', 'Prädikativum', 'Präpositionale Bestimmung', 'Adverbiale Bestimmung', 'Infinitiv', 'Relativsatz', 'Nebensatz', 'Konjunktion', 'Subjunktion', 'Vokativ', 'Sonstiges'],
+            advanced: ['Subjekt', 'Prädikat', 'Akkusativobjekt', 'Dativobjekt', 'Genitivobjekt', 'Ablativ', 'Ablativus absolutus', 'Prädikativum', 'Präpositionale Bestimmung', 'Adverbiale Bestimmung', 'Infinitiv', 'AcI/NcI', 'Partizipialkonstruktion', 'Relativsatz', 'Nebensatz', 'Konjunktion', 'Subjunktion', 'Vokativ', 'Sonstiges']
         }
     };
+
+    // Labels for clause brackets ("Klammern"). Unlike PRESETS, which shrinks at lower levels, this list
+    // applies at every level: a beginner exercise can still carry a correctly labelled Relativsatz bracket
+    // even though that word never appears in the beginner word-label list (Anke's decision, 2026-09-06).
+    const GROUP_LABELS = {
+        en: ['Subordinate clause', 'Relative clause', 'Accusative/Nominative with infinitive', 'Participial phrase', 'Ablative absolute'],
+        de: ['Nebensatz', 'Relativsatz', 'AcI/NcI', 'Partizipialkonstruktion', 'Ablativus absolutus']
+    };
+
+    function isGroupLabel(label, lang) { return GROUP_LABELS[lang].indexOf(label) !== -1; }
+
+    // Rule 8 forbids "Genitivattribut" as a word's function, but a model may still send it. Spotting it in the
+    // raw answer lets the import recover the word's real function from its head noun instead of losing it.
+    function isGenitiveAttributeLabel(label) {
+        const l = String(label == null ? '' : label).trim().toLowerCase();
+        return l.indexOf('genitivattribut') !== -1 || l.indexOf('genitive attr') !== -1;
+    }
 
     const SEMANTIC_COLORS = {
         // --- Core sentence components ---
@@ -41,7 +58,7 @@
         'Genitive object': '#fbcfe8', 'Genitivobjekt': '#fbcfe8',                     // Light Pink
         'Ablative': '#93c5fd', 'Ablativ': '#93c5fd',                                  // Soft Blue
         'Ablative absolute': '#60a5fa', 'Ablativus absolutus': '#60a5fa',             // Brighter Blue
-        'Adverb': '#ffedd5',                                                          // Pale Peach
+        'Adverb': '#ffedd5', 'Adverbiale Bestimmung': '#ffedd5',                      // Pale Peach
         'Infinitive': '#e9d5ff', 'Infinitiv': '#e9d5ff',                              // Pale Lilac
         'Predicative': '#fca5a5', 'Prädikativum': '#fca5a5',                          // Rose
         'Conjunction': '#d6d3d1', 'Konjunktion': '#d6d3d1',                           // Warm Grey
@@ -59,7 +76,7 @@
 
     const ABBREVIATIONS = {
         en: { 'Subject': 'Subj', 'Accusative object': 'Acc. Obj', 'Dative object': 'Dat. Obj', 'Genitive object': 'Gen. Obj', 'Ablative': 'Abl', 'Ablative absolute': 'Abl. Abs.', 'Predicative': 'Pred', 'Prepositional phrase': 'Prep. Phr', 'Adverb': 'Adv', 'Verb': 'Verb', 'Infinitive': 'Inf', 'Participial phrase': 'Part. Phr', 'Relative clause': 'Rel. Cl', 'Subordinate clause': 'Sub. Cl', 'Conjunction': 'Conj', 'Subjunction': 'Subjunc', 'Accusative/Nominative with infinitive': 'Acc/Nom+Inf', 'Vocative': 'Voc', 'Other': 'Other' },
-        de: { 'Subjekt': 'Subj', 'Akkusativobjekt': 'Akk. Obj', 'Dativobjekt': 'Dat. Obj', 'Genitivobjekt': 'Gen. Obj', 'Ablativ': 'Abl', 'Ablativus absolutus': 'Abl. Abs.', 'Prädikativum': 'Präd', 'Präpositionale Bestimmung': 'Präp. Best.', 'Adverb': 'Adv', 'Prädikat': 'Prädikat', 'Infinitiv': 'Inf', 'Partizipialkonstruktion': 'Part. Konstr', 'Relativsatz': 'Rel. Satz', 'Nebensatz': 'Nebensatz', 'Konjunktion': 'Konj', 'Subjunktion': 'Subjunk', 'AcI/NcI': 'AcI/NcI', 'Vokativ': 'Vok', 'Sonstiges': 'Sonst.' }
+        de: { 'Subjekt': 'Subj', 'Akkusativobjekt': 'Akk. Obj', 'Dativobjekt': 'Dat. Obj', 'Genitivobjekt': 'Gen. Obj', 'Ablativ': 'Abl', 'Ablativus absolutus': 'Abl. Abs.', 'Prädikativum': 'Präd', 'Präpositionale Bestimmung': 'Präp. Best.', 'Adverbiale Bestimmung': 'Adv', 'Prädikat': 'Prädikat', 'Infinitiv': 'Inf', 'Partizipialkonstruktion': 'Part. Konstr', 'Relativsatz': 'Rel. Satz', 'Nebensatz': 'N.satz', 'Konjunktion': 'Konj', 'Subjunktion': 'Subjunk', 'AcI/NcI': 'AcI/NcI', 'Vokativ': 'Vok', 'Sonstiges': 'Sonst.' }
     };
 
     // Keyboard shortcuts in the editor and on the student page. Keys x, m, w, g are reserved for the tools.
@@ -73,7 +90,7 @@
         'Ablative absolute': 'b', 'Ablativus absolutus': 'b',
         'Prepositional phrase': 'o', 'Präpositionale Bestimmung': 'o',
         'Predicative': 'r', 'Prädikativum': 'r',
-        'Adverb': 'e',
+        'Adverb': 'e', 'Adverbiale Bestimmung': 'e',
         'Infinitive': 'i', 'Infinitiv': 'i',
         'Accusative/Nominative with infinitive': 'c', 'AcI/NcI': 'c',
         'Participial phrase': 'z', 'Partizipialkonstruktion': 'z',
@@ -137,6 +154,8 @@
             if (l.includes('infinitive') && !l.includes('with')) return 'Infinitiv';
             if (l === 'verb') return 'Prädikat';
             if (l.includes('vocative') || l.includes('vokativ')) return 'Vokativ';
+            if (l.includes('adverbial')) return 'Adverbiale Bestimmung';
+            if (l.includes('prädikatsnomen') || l.includes('predicate noun') || l.includes('predicate nominal')) return 'Prädikativum';
         } else {
             if (l.includes('dativ')) return 'Dative object';
             if (l.includes('akkusativ')) return 'Accusative object';
@@ -151,6 +170,8 @@
             if (l.includes('subjekt')) return 'Subject';
             if (l.includes('infinitiv') && !l.includes('aci')) return 'Infinitive';
             if (l.includes('vocative') || l.includes('vokativ')) return 'Vocative';
+            if (l.includes('adverbial')) return 'Adverb';
+            if (l.includes('prädikatsnomen') || l.includes('predicate noun') || l.includes('predicate nominal')) return 'Predicative';
         }
         const s = String(label).trim();
         return s.charAt(0).toUpperCase() + s.slice(1);
@@ -172,5 +193,5 @@
         return map;
     }
 
-    return { PUNCT, OTHER, MAIN_CLAUSE, PRESETS, SEMANTIC_COLORS, SAFE_COLORS, ABBREVIATIONS, SHORTCUTS, LEGACY, translateLabel, normalizeLabel, buildLabelMap };
+    return { PUNCT, OTHER, MAIN_CLAUSE, PRESETS, GROUP_LABELS, SEMANTIC_COLORS, SAFE_COLORS, ABBREVIATIONS, SHORTCUTS, LEGACY, isGroupLabel, isGenitiveAttributeLabel, translateLabel, normalizeLabel, buildLabelMap };
 });

@@ -19,6 +19,47 @@ test('every preset label has a colour and an abbreviation in its language', () =
     }
 });
 
+// --- Anke's label decisions (2026-09-06) ---------------------------------------------------
+test('German calls the adverbial label "Adverbiale Bestimmung"; English stays "Adverb"', () => {
+    for (const level of ['intermediate', 'advanced']) {
+        assert.ok(L.PRESETS.de[level].includes('Adverbiale Bestimmung'), level);
+        assert.ok(!L.PRESETS.de[level].includes('Adverb'), level);
+        assert.ok(L.PRESETS.en[level].includes('Adverb'), level);
+    }
+    assert.equal(L.translateLabel('Adverbiale Bestimmung', 'en'), 'Adverb');
+    assert.equal(L.translateLabel('Adverb', 'de'), 'Adverbiale Bestimmung');
+    assert.equal(L.ABBREVIATIONS.de['Adverbiale Bestimmung'], 'Adv');
+    assert.equal(L.ABBREVIATIONS.de['Nebensatz'], 'N.satz');
+});
+
+test('normalizeLabel knows "adverbiale" and "Prädikatsnomen"', () => {
+    assert.equal(L.normalizeLabel('Adverbiale Bestimmung', 'de'), 'Adverbiale Bestimmung');
+    assert.equal(L.normalizeLabel('adverbiale', 'en'), 'Adverb');
+    assert.equal(L.normalizeLabel('Prädikatsnomen', 'de'), 'Prädikativum');
+    assert.equal(L.normalizeLabel('predicate noun', 'en'), 'Predicative');
+});
+
+// --- clause labels are valid at every level (review item 2.1) --------------------------------
+test('GROUP_LABELS exist in both languages, translate into each other, and are real advanced labels', () => {
+    assert.equal(L.GROUP_LABELS.en.length, L.GROUP_LABELS.de.length);
+    L.GROUP_LABELS.de.forEach((de, i) => {
+        assert.ok(L.PRESETS.de.advanced.includes(de), `${de} is an advanced label`);
+        assert.equal(L.translateLabel(de, 'en'), L.GROUP_LABELS.en[i], `${de} translates`);
+    });
+});
+
+test('isGroupLabel accepts clause labels regardless of level, and rejects word labels', () => {
+    assert.ok(L.isGroupLabel('Relativsatz', 'de'));
+    assert.ok(L.isGroupLabel('Subordinate clause', 'en'));
+    assert.ok(!L.isGroupLabel('Subjekt', 'de'));
+});
+
+test('a beginner exercise keeps a correctly labelled clause bracket', () => {
+    // The beginner word list has no clause labels at all; the bracket must survive anyway.
+    assert.ok(!L.PRESETS.de.beginner.includes('Relativsatz'));
+    assert.ok(L.isGroupLabel(L.normalizeLabel('Relativsatz', 'de'), 'de'));
+});
+
 // --- item 3: "Genitivattribut" must not half-exist -------------------------------------------
 test('"Genitivattribut" / "Genitive attribute" is not a label anywhere (genitive attributes are marked with u:true)', () => {
     assert.ok(!union().has('Genitivattribut') && !union().has('Genitive attribute'));
@@ -27,6 +68,15 @@ test('"Genitivattribut" / "Genitive attribute" is not a label anywhere (genitive
     assert.equal(L.ABBREVIATIONS.de['Genitivattribut'], undefined);
     assert.equal(L.ABBREVIATIONS.en['Genitive attribute'], undefined);
 });
+test('isGenitiveAttributeLabel spots the forbidden label in the raw answer, so the word can keep its real function', () => {
+    for (const s of ['Genitivattribut', 'genitivattribut', 'Genitive attribute', 'genitive attr']) {
+        assert.ok(L.isGenitiveAttributeLabel(s), s);
+    }
+    for (const s of ['Genitivobjekt', 'Genitive object', 'Subjekt', '', null]) {
+        assert.ok(!L.isGenitiveAttributeLabel(s), String(s));
+    }
+});
+
 test('a model answer "Genitivattribut" / "Genitive attribute" is mapped to the Other label explicitly', () => {
     assert.equal(L.normalizeLabel('Genitivattribut', 'de'), 'Sonstiges');
     assert.equal(L.normalizeLabel('genitive attribute', 'de'), 'Sonstiges');

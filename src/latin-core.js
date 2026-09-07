@@ -11,8 +11,9 @@
     const PUNCT = 'Punct';
 
     // Words that are welded onto the following word as one "Präpositionale Bestimmung" / "Prepositional phrase".
-    // Grammar-side list: change here (see docs/syntax-analyse-review.md for the discussion of "cum").
-    const PREPOSITIONS = ["a", "ab", "ad", "ante", "apud", "circum", "contra", "cum", "de", "e", "ex", "extra", "in", "infra", "inter", "intra", "ob", "per", "post", "prae", "pro", "prope", "propter", "sine", "sub", "super", "trans", "ultra"];
+    // Grammar-side list. "cum" is deliberately absent: it is far more often a subjunction ("cum Caesar venisset")
+    // than a preposition, and welding it swallowed whole subordinate clauses (Anke's decision, 2026-09-06).
+    const PREPOSITIONS = ["a", "ab", "ad", "ante", "apud", "circum", "contra", "de", "e", "ex", "extra", "in", "infra", "inter", "intra", "ob", "per", "post", "prae", "pro", "prope", "propter", "sine", "sub", "super", "trans", "ultra"];
 
     // Any Unicode letter (covers ā ē ī ō ū in both precomposed and decomposed form).
     function hasLetters(s) { return /\p{L}/u.test(String(s == null ? '' : s)); }

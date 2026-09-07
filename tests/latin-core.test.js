@@ -71,9 +71,15 @@ test('a genitive flag on the welded noun is kept on the phrase', () => {
     const { welded } = L.weldPrepositions([{ w: 'in', f: 'X' }, { w: 'urbe', f: 'X', u: true }], DE.prep);
     assert.equal(welded[0].u, true);
 });
-test('documented current behaviour: "cum" welds even as a subjunction (grammar decision pending, see docs)', () => {
+test('"cum" is no longer welded, so "cum Caesar venisset" keeps its subjunction (Anke\'s decision, 2026-09-06)', () => {
+    assert.ok(!L.PREPOSITIONS.includes('cum'));
     const { welded } = L.weldPrepositions([{ w: 'Cum', f: 'Subjunktion' }, { w: 'Caesar', f: 'Subjekt' }], DE.prep);
-    assert.deepEqual(words(welded), ['Cum Caesar']);
+    assert.deepEqual(words(welded), ['Cum', 'Caesar']);
+    assert.equal(welded[0].f, 'Subjunktion');
+});
+test('the other prepositions still weld', () => {
+    const { welded } = L.weldPrepositions([{ w: 'in', f: 'X' }, { w: 'foro', f: 'X' }], DE.prep);
+    assert.deepEqual(words(welded), ['in foro']);
 });
 
 // --- splitTokenParts ----------------------------------------------------------------

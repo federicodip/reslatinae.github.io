@@ -353,6 +353,10 @@
         .s-text { border-bottom: 3px dashed transparent; transition: border-color 0.2s, background-color 0.2s; border-radius: 2px; }
         .s-text.marked-gen { border-bottom-color: #ec4899; }
         .s-text.error-gen { border-bottom-color: #ef4444; background-color: #fef2f2; }
+        .s-text.missed-gen { border-bottom-color: #f59e0b; border-bottom-style: solid; background-color: #fffbeb; }
+
+        .btn-submit-exam { background: #10b981 !important; }
+        .btn-submit-exam:hover { background: #059669 !important; }
 
         .s-group { display: inline-block; position: relative; border: 1px solid #94a3b8; border-bottom:none; border-radius: 6px 6px 0 0; padding: 22px 6px 6px 6px; margin: 20px 4px 0 4px; vertical-align: bottom; transition: all 0.2s; z-index: 1; }
         .s-group:hover, .s-group:focus-within { z-index: 10; }
@@ -412,6 +416,7 @@
         body.high-contrast .hover-word { background-color: #333; color: #fff; border-bottom: 2px solid #555; }
         body.high-contrast .hover-word[data-done="true"] { border: 2px solid #fff !important; color: #000 !important; font-weight: 600; }
         body.high-contrast .s-text.marked-gen { border-bottom-color: #f472b6 !important; }
+        body.high-contrast .s-text.missed-gen { border-bottom-color: #fbbf24 !important; background-color: #3a2f00 !important; }
         body.high-contrast .s-group { border-color: #fff !important; }
         body.high-contrast .g-label { background: #000 !important; color: #fff !important; border-color: #fff !important; }
         body.high-contrast .punct { color: #fff; }
@@ -437,7 +442,7 @@
 
     <script type="text/template" id="template-student-js" data-ref="templateStudentJs">
         let activeEl = null; let activeSubWord = null; let mode = ""; const menu = document.getElementById('menu-common'); const menuBtns = Array.from(document.querySelectorAll('.menu-btn'));
-        let hideMenuTimeout; let labelShortcuts = {}; let hoveredStudentEl = null; let exMode = 'practise'; let examScore = 0; let answeredItems = 0; let sZoom = 1; let genMistakes = 0;
+        let hideMenuTimeout; let labelShortcuts = {}; let hoveredStudentEl = null; let exMode = 'practise'; let examScore = 0; let answeredItems = 0; let sZoom = 1; let examFinalized = false;
         const totalPhrases = document.querySelectorAll('.hover-word, .g-label').length;
         const totalGens = document.querySelectorAll('.s-text[data-u="true"]').length;
         const totalItems = totalPhrases + totalGens;
@@ -532,6 +537,7 @@
             
             const fBtns = document.querySelectorAll('.footer-toolbar .btn');
             fBtns[0].textContent = t.btnSaveProg; fBtns[1].textContent = t.btnClearProg; fBtns[2].textContent = t.print; fBtns[3].textContent = t.download;
+            const submitBtn = document.getElementById('btn-submit-exam'); if (submitBtn) submitBtn.textContent = t.btnSubmitExam;
             
             document.querySelector('.results-title').textContent = t.examResults; document.querySelector('.btn-copy').textContent = t.copyResults;
             document.querySelector('#results-modal .btn:not(.btn-copy)').textContent = t.close; document.querySelectorAll('textarea:not(.results-textarea)').forEach(ta => ta.placeholder = t.transPlaceholder);
@@ -589,6 +595,8 @@
             exMode = m; const bp = document.getElementById('btn-practise'); const be = document.getElementById('btn-exam');
             bp.style.background = m === 'practise' ? 'white' : 'transparent'; bp.style.boxShadow = m === 'practise' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'; bp.style.color = m === 'practise' ? '#111827' : '#475569';
             be.style.background = m === 'exam' ? 'white' : 'transparent'; be.style.boxShadow = m === 'exam' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'; be.style.color = m === 'exam' ? '#111827' : '#475569';
+            const submitBtn = document.getElementById('btn-submit-exam');
+            if (submitBtn) submitBtn.style.display = (m === 'exam' && !examFinalized) ? 'inline-block' : 'none';
         }
 
         menu.addEventListener('mouseenter', () => clearTimeout(hideMenuTimeout));
@@ -686,7 +694,6 @@
                             currentSubWord.classList.add('error-gen');
                             setTimeout(() => currentSubWord.classList.remove('error-gen'), 800);
                             showToast(t.notGenitive, true);
-                            if (exMode === 'exam') { genMistakes++; }
                         }
                     } else {
                         activeSubWord.classList.remove('marked-gen');
@@ -772,23 +779,68 @@
             }); 
             
             const currentMarkedGens = document.querySelectorAll('.s-text[data-u="true"].marked-gen').length;
-			if (exMode === 'exam' && answeredItems === totalPhrases && currentMarkedGens === totalGens && totalPhrases > 0) {
-                const t = studentTexts[currentLang];
-                let genScore = 0;
-                document.querySelectorAll('.s-text[data-u="true"]').forEach(st => {
-                    if(st.classList.contains('marked-gen')) genScore++;
-                });
-                let finalScore = examScore + genScore - genMistakes;
-                if (finalScore < 0) finalScore = 0; // Prevents the score from dropping below zero
-                
-                setTimeout(() => {
-                    const pct = Math.round((finalScore / totalItems) * 100);
-                    document.getElementById('final-score-display').textContent = finalScore + " / " + totalItems + " (" + pct + "%)";
-                    
-                    /* Note: The newline here is handled via raw string \n now */
-                    document.getElementById('results-text').value = t.resExercise + (titleInput || t.docTitle).replace(/["'\`]/g, "") + "\n" + t.resDate + new Date().toLocaleDateString() + "\n" + t.resScore + finalScore + " / " + totalItems + " (" + pct + "%)";                    document.getElementById('results-modal').style.display = 'flex';
-                }, 500);
+			if (exMode === 'exam' && !examFinalized && answeredItems === totalPhrases && currentMarkedGens === totalGens && totalPhrases > 0) {
+                finalizeExam();
             }
+        }
+
+        function finalizeExam() {
+            if (examFinalized) return;
+            examFinalized = true;
+            const t = studentTexts[currentLang];
+            let genScore = 0;
+            document.querySelectorAll('.s-text[data-u="true"]').forEach(st => {
+                if(st.classList.contains('marked-gen')) genScore++;
+            });
+            // Genitive attributes now weigh exactly like labelled phrases: 1 point if found, 0 if not.
+            // (No separate deduction for earlier wrong guesses while searching - matches how a wrong
+            // label only ever costs the single point of that task, never more.)
+            let finalScore = examScore + genScore;
+            if (finalScore < 0) finalScore = 0; // Prevents the score from dropping below zero
+
+            const submitBtn = document.getElementById('btn-submit-exam');
+            if (submitBtn) submitBtn.style.display = 'none';
+
+            setTimeout(() => {
+                const pct = Math.round((finalScore / totalItems) * 100);
+                document.getElementById('final-score-display').textContent = finalScore + " / " + totalItems + " (" + pct + "%)";
+
+                /* Note: The newline here is handled via raw string \n now */
+                document.getElementById('results-text').value = t.resExercise + (titleInput || t.docTitle).replace(/["'\`]/g, "") + "\n" + t.resDate + new Date().toLocaleDateString() + "\n" + t.resScore + finalScore + " / " + totalItems + " (" + pct + "%)";                    document.getElementById('results-modal').style.display = 'flex';
+            }, 500);
+        }
+
+        function submitExam() {
+            if (exMode !== 'exam' || examFinalized) return;
+            const t = studentTexts[currentLang];
+            if (!confirm(t.confirmSubmit)) return;
+
+            // Reveal every translation box, even for sentences that were never fully solved.
+            document.querySelectorAll('.sentence-container').forEach((s, i) => {
+                const b = document.getElementById('t-container-' + i);
+                if (b) b.style.display = 'block';
+            });
+
+            // Any phrase/group left unanswered counts as an error: reveal the correct label so
+            // the student sees what was missing, same as an actively wrong guess would show.
+            document.querySelectorAll('.hover-word, .g-label').forEach(el => {
+                if (el.dataset.done !== "true") {
+                    const m = el.classList.contains('hover-word') ? "word" : "group";
+                    const correct = m === "word" ? el.dataset.ans : el.parentElement.dataset.ans;
+                    solve(el, correct, m);
+                    if (m === "word") { el.style.border = "2px solid #ef4444"; }
+                    else { el.parentElement.style.borderColor = "#ef4444"; }
+                    answeredItems++;
+                }
+            });
+
+            // Any required genitive attribute that was never found: highlight it so the student
+            // sees what was missing; it earns no point, same as an unanswered phrase.
+            document.querySelectorAll('.s-text[data-u="true"]:not(.marked-gen)').forEach(st => {
+                st.classList.add('missed-gen');
+            });
+
+            finalizeExam();
         }
 
        function saveStudentProgress() {
@@ -803,7 +855,7 @@
             
             const textareas = Array.from(document.querySelectorAll('textarea:not(.results-textarea)')).map(ta => ta.value);
             
-            const data = { items: state, subWords: subState, textareas: textareas, exMode: exMode, examScore: examScore, answeredItems: answeredItems, genMistakes: genMistakes };
+            const data = { items: state, subWords: subState, textareas: textareas, exMode: exMode, examScore: examScore, answeredItems: answeredItems };
             
             // --- NEW TRY/CATCH BLOCK ---
             try {
@@ -826,7 +878,7 @@
                 const textareas = Array.from(document.querySelectorAll('textarea:not(.results-textarea)'));
                 
                 if (data.items && data.items.length !== items.length) { console.warn("Saved progress length does not match. Ignoring."); return; }
-                exMode = data.exMode || 'practise'; setMode(exMode); examScore = data.examScore || 0; answeredItems = data.answeredItems || 0; genMistakes = data.genMistakes || 0;
+                exMode = data.exMode || 'practise'; setMode(exMode); examScore = data.examScore || 0; answeredItems = data.answeredItems || 0;
                 
                 data.items.forEach((state, i) => {
                     if (items[i] && state.done) {
@@ -953,6 +1005,7 @@ const CONFIG = {
     SAFE_COLORS: LatinLabels.SAFE_COLORS,
     SEMANTIC_COLORS: LatinLabels.SEMANTIC_COLORS,
     PRESETS: LatinLabels.PRESETS,
+    GROUP_LABELS: LatinLabels.GROUP_LABELS,
     ABBREVIATIONS: LatinLabels.ABBREVIATIONS,
     LANG_TEXT: {
         en: {
@@ -2084,7 +2137,10 @@ function deleteWordFromModal() {
 
 function openGroupModal() {
     DOM.labelSuggestions.innerHTML = '';
-    AppState.functions.forEach(f => { 
+    // Suggest the level's word labels PLUS the fixed clause labels (these are valid for brackets
+    // at every level, even where they aren't part of the level's own word-label list).
+    const suggestions = [...new Set([...AppState.functions, ...CONFIG.GROUP_LABELS[AppState.lang]])];
+    suggestions.forEach(f => { 
         const opt = document.createElement('option'); 
         opt.value = f; 
         DOM.labelSuggestions.appendChild(opt); 
@@ -2098,7 +2154,8 @@ function openGroupModal() {
 function editGroupLabel(index) {
     AppState.ui.editingGroupIndex = index;
     DOM.labelSuggestions.innerHTML = '';
-    AppState.functions.forEach(f => { 
+    const suggestions = [...new Set([...AppState.functions, ...CONFIG.GROUP_LABELS[AppState.lang]])];
+    suggestions.forEach(f => { 
         const opt = document.createElement('option'); 
         opt.value = f; 
         DOM.labelSuggestions.appendChild(opt); 
@@ -2246,28 +2303,46 @@ function importAI(raw) {
         
         rawGroups.forEach(g => { 
             let norm = normalizeLabel(g.label);
-            g.label = AppState.functions.includes(norm) ? norm : AppState.getOtherLabel();
+            // Groups may use either the current level's word labels or the fixed, level-independent
+            // clause labels (Nebensatz, Relativsatz, AcI/NcI, Partizipialkonstruktion, Ablativus
+            // absolutus) - so a correctly-labelled clause never gets silently downgraded to "Sonstiges"
+            // just because the exercise is set to Beginner/Anfänger.
+            g.label = (AppState.functions.includes(norm) || CONFIG.GROUP_LABELS[AppState.lang].includes(norm)) ? norm : AppState.getOtherLabel();
         });
 
-        d.words.forEach(w => {
-            w.w = w.w || ""; 
-            let func = w.f || ""; 
+        d.words.forEach(w => { w.w = LatinCore.joinHyphenation(w.w || ""); });
 
-            w.w = LatinCore.joinHyphenation(w.w);
-            
-            if (!LatinCore.hasLetters(w.w)) {
-                w.f = CONFIG.PUNCT;
-                w.u = false;
+        // Pass 1: resolve every word's function/underline flag, except words the model wrongly labelled
+        // "Genitivattribut"; those are deferred so they can borrow a resolved neighbour's label below.
+        const resolved = d.words.map(w => {
+            const func = w.f || "";
+            if (!LatinCore.hasLetters(w.w)) return { f: CONFIG.PUNCT, u: false, isPunct: true };
+            if (LatinLabels.isGenitiveAttributeLabel(func)) return { f: null, u: true, isPunct: false, isGenAttr: true };
+            if (func.toLowerCase() === CONFIG.MAIN_CLAUSE_EN.toLowerCase() || func.toLowerCase() === CONFIG.MAIN_CLAUSE_DE.toLowerCase()) {
+                return { f: AppState.getOtherLabel(), u: !!w.u, isPunct: false };
             }
-            else if (func.toLowerCase() === CONFIG.MAIN_CLAUSE_EN.toLowerCase() || func.toLowerCase() === CONFIG.MAIN_CLAUSE_DE.toLowerCase()) {
-                w.f = AppState.getOtherLabel();
-            }
-            else {
-                let norm = normalizeLabel(func);
-                w.f = AppState.functions.includes(norm) ? norm : AppState.getOtherLabel();
-            }
+            const norm = normalizeLabel(func);
+            return { f: AppState.functions.includes(norm) ? norm : AppState.getOtherLabel(), u: !!w.u, isPunct: false };
+        });
+
+        // Pass 2: a word wrongly labelled "Genitivattribut"/"Genitive attribute" inherits its actual
+        // function from the nearest neighbouring word (preferring the preceding word, since the
+        // genitive attribute typically follows its head noun, e.g. "Aurum Metelli" - "Metelli"
+        // should copy "Aurum"'s label) - matching the "EXACT SAME label as the head word" rule
+        // instead of collapsing to "Sonstiges"/"Other".
+        resolved.forEach((r, i) => {
+            if (!r.isGenAttr) return;
+            const prev = resolved[i - 1];
+            const next = resolved[i + 1];
+            if (prev && !prev.isPunct && !prev.isGenAttr) r.f = prev.f;
+            else if (next && !next.isPunct && !next.isGenAttr) r.f = next.f;
+            else r.f = AppState.getOtherLabel();
+        });
+
+        d.words.forEach((w, i) => {
+            w.f = resolved[i].f;
             w.b = w.b || 0;
-            w.u = !!w.u;
+            w.u = resolved[i].u;
         });
         
         const mergeResult = applyPrepositionMerging(d.words);
@@ -2427,6 +2502,11 @@ function startManual() {
 
 function initEditor(words) {
     AppState.functions = [...CONFIG.PRESETS[AppState.lang][AppState.level]];
+    // Fixed clause labels (see GROUP_LABELS) can be used in "groups" at any level, so they may not
+    // be part of the level's own word-label preset. Without this, a beginner-level exercise that
+    // correctly has a "Relativsatz" bracket would lose that label from the palette right here, and
+    // it would then be missing from the exported student page's answer choices for that bracket.
+    AppState.groups.forEach(g => { if (g.label && !AppState.functions.includes(g.label)) AppState.functions.push(g.label); });
     AppState.history = [];
     AppState.words = words;
     DOM.editorPageTitle.value = DOM.pageTitle.value;
@@ -2551,6 +2631,8 @@ function generateStudentHTML(words, groups, title, allLabels, imgUrl, notes, lan
             transPlaceholder: "Enter translation...", docTitle: "Interactive Syntax Explorer",
             practiseMode: "Practise Mode", examMode: "Exam Mode",
             resetWarn: "Changing the mode will reload the page and reset your progress. Continue?",
+            btnSubmitExam: "✅ Submit Exam",
+            confirmSubmit: "Submit the exam now? Any unanswered phrases and any genitive attributes you haven't found yet will be counted as errors.",
             examResults: "Exam Results", copyResults: "Copy to Clipboard", copied: "Copied!", close: "Close",
             saveWarning: "⚠️ Note: Your progress is saved locally in this web browser. You must open this file on this exact same device and browser to resume your work later. Clearing your browser data will delete your progress. Do you want to save now?",
             resExercise: "Exercise: ", resDate: "Date: ", resScore: "Score: ",
@@ -2565,6 +2647,8 @@ function generateStudentHTML(words, groups, title, allLabels, imgUrl, notes, lan
             transPlaceholder: "Übersetzung eingeben...", docTitle: "Interaktives Syntax-Training",
             practiseMode: "Übungsmodus", examMode: "Prüfungsmodus",
             resetWarn: "Ein Moduswechsel lädt die Seite neu und setzt deinen Fortschritt zurück. Fortfahren?",
+            btnSubmitExam: "✅ Prüfung abgeben",
+            confirmSubmit: "Prüfung jetzt abgeben? Unbeantwortete Wortgruppen und noch nicht gefundene Genitivattribute werden als Fehler gewertet.",
             examResults: "Prüfungsergebnisse", copyResults: "Ergebnisse kopieren", copied: "Kopiert!", close: "Schließen",
             saveWarning: "⚠️ Hinweis: Dein Fortschritt wird lokal in diesem Webbrowser gespeichert. Du musst diese Datei auf genau demselben Gerät und in demselben Browser öffnen, um später weiterzuarbeiten. Das Löschen der Browserdaten löscht auch deinen Fortschritt. Möchtest du jetzt speichern?",
             resExercise: "Übung: ", resDate: "Datum: ", resScore: "Ergebnis: ",
@@ -2615,6 +2699,7 @@ function generateStudentHTML(words, groups, title, allLabels, imgUrl, notes, lan
             <button class="btn" onclick="clearStudentProgress()" id="btn-clear-progress">${t.btnClearProg}</button>
             <button class="btn" onclick="window.print()">${t.print}</button> 
             <button class="btn" onclick="downloadPage()">${t.download}</button>
+            <button class="btn btn-submit-exam" onclick="submitExam()" id="btn-submit-exam" style="display:none;">${t.btnSubmitExam}</button>
         </div>
         <div id="menu-common" class="radio-menu">
             <button type="button" class="menu-btn gen-btn" data-action="toggle-gen">🖍️ Mark Genitive (G)</button>
