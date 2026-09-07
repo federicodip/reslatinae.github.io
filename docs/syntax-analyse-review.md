@@ -1,112 +1,115 @@
 # Review der Syntaxanalyse-Logik
 
-Stand: 4. September 2026. Zeilenangaben beziehen sich auf `index.html` im Hauptzweig (Commit `98dc8c8`).
+Stand: 7. September 2026, nach Ihren Änderungen vom 6. September und deren Zusammenführung mit der API-Fassung.
 
-Dieses Dokument ändert keine Logik. Es sammelt Widersprüche und Beobachtungen aus dem KI-Prompt, den Label-Listen und der Schülerseite und macht Vorschläge. Alle Entscheidungen zur Grammatik liegen bei der Autorin; die Vorschläge sind als Diskussionsgrundlage gedacht.
+Dieses Dokument ändert keine Logik. Es sammelt Widersprüche und Beobachtungen aus dem KI-Prompt, den Label-Listen und der Schülerseite und macht Vorschläge. Alle Entscheidungen zur Grammatik liegen bei Ihnen; die Vorschläge sind als Diskussionsgrundlage gedacht.
 
-**Kurzfassung der beiden wichtigsten Punkte**
+Die meisten Punkte der ersten Fassung sind inzwischen erledigt — die beiden wichtigsten haben Sie selbst gelöst (feste Klammer-Labels für alle Stufen, `cum` aus der Präpositionsliste). Abschnitt 5 hält fest, was umgesetzt wurde. Offen sind noch drei Punkte:
 
-1. Regel 7 verlangt für jede Subjunktion und jedes Relativpronomen eine Klammer (`Nebensatz`/`Relativsatz`), aber auf der Stufe „Anfänger“ sind diese Labels nicht erlaubt; der Import macht daraus „Sonstiges“.
-2. `cum` steht in der Präpositionsliste und wird deshalb immer mit dem Folgewort zu einer „Präpositionalen Bestimmung“ verschmolzen, auch als Subjunktion („cum Caesar venisset“).
+1. Der Beispielsatz im Prompt zeigt Partizipien als „Prädikat“ ohne Klammer (Abschnitt 2.1).
+2. Die bereits veröffentlichten Übungen bieten weiterhin „Adverb“ an, die Anwendung erzeugt jetzt „Adverbiale Bestimmung“ (Abschnitt 2.2).
+3. Beim Export landen alle Labels der Palette im Antwortmenü der Schülerseite, auch unbenutzte (Abschnitt 4).
 
 ---
 
 ## 1. Was geprüft wurde
 
+Die Textlogik und die Label-Listen liegen inzwischen in eigenen Dateien, damit sie geprüft und getestet werden können; Zeilenangaben sind deshalb durch Dateinamen ersetzt.
+
 | Bereich | Stelle |
 |---|---|
-| KI-Prompt, deutsch / englisch | Z. 2227–2238 / Z. 2239–2250 |
-| Label-Listen pro Stufe (Anfänger, Fortgeschritten, Profi) | Z. 975–986 |
-| Farben und Abkürzungen der Labels | Z. 950–974, Z. 987–990 |
-| Synonym-Zuordnung `normalizeLabel` (bildet KI-Ausgaben auf die festen Labels ab) | Z. 2314–2356 |
-| Präpositionsliste und Verschmelzungsregel | Z. 940, Z. 2287–2301 |
-| Enklitika-Regel (-que, -ne, -ve) | Z. 2306 |
-| Anleitungstexte der Schülerseite | Z. 2585–2614 |
-| Prüfungsmodus und Punktevergabe | Z. 776–792 |
-| Die 13 veröffentlichten Übungen (`cic_cael_*.html`) als Beleg für die tatsächliche Verwendung | – |
+| KI-Prompt, deutsch und englisch | `src/latin-prompt.js` |
+| Label-Listen pro Stufe, Klammer-Labels, Farben, Abkürzungen, Tastenkürzel | `src/latin-labels.js` |
+| Synonym-Zuordnung `normalizeLabel` (bildet KI-Ausgaben auf die festen Labels ab) | `src/latin-labels.js` |
+| Präpositionsliste, Verschmelzungsregel, Enklitika-Regel (-que, -ne, -ve) | `src/latin-core.js` |
+| Anleitungstexte und Prüfungsmodus der Schülerseite | `index.html` (Vorlage `template-student-js`) |
+| Die 15 veröffentlichten Übungen als Beleg für die tatsächliche Verwendung | `cic_cael_*.html`, `example_page*.html` |
 
-Tatsächliche Verwendung der Labels in den veröffentlichten Übungen (Anzahl markierter Wortgruppen):
+Tatsächliche Verwendung der Labels in den veröffentlichten Übungen (Anzahl markierter Wortgruppen; die englische Beispielseite verwendet dieselben Labels auf Englisch und ist hier nicht mitgezählt):
 
-| Label | Anzahl | | Klammer-Label | Anzahl |
+| Wort-Label | Anzahl | | Klammer-Label | Anzahl |
 |---|---|---|---|---|
-| Prädikat | 196 | | Nebensatz | 85 |
-| Adverb | 174 | | Relativsatz | 40 |
-| Subjekt | 164 | | AcI | 32 |
-| Akkusativobjekt | 163 | | Partizipialkonstruktion | 7 |
-| Präpositionale Bestimmung | 128 | | Infinitiv | 2 |
-| Verb (ältere Übungen) | 95 | | | |
-| Infinitiv | 73 | | | |
+| Prädikat | 303 | | Nebensatz | 88 |
+| Adverb | 182 | | Relativsatz | 43 |
+| Akkusativobjekt | 179 | | AcI/NcI | 32 |
+| Subjekt | 177 | | Partizipialkonstruktion | 9 |
+| Präpositionale Bestimmung | 138 | | Infinitiv | 4 |
+| Infinitiv | 76 | | | |
 | Sonstiges | 67 | | | |
-| Prädikativum | 56 | | | |
-| Subjunktion | 49 | | | |
-| Dativobjekt | 46 | | | |
+| Prädikativum | 61 | | | |
+| Ablativ | 52 | | | |
+| Subjunktion | 51 | | | |
+| Dativobjekt | 48 | | | |
 | Konjunktion | 40 | | | |
-| Ablativ | 38 | | | |
 | Vokativ | 14 | | | |
 | Ablativus absolutus | 7 | | | |
-| AcI (als Wortlabel) | 4 | | | |
+| Partizipialkonstruktion (als Wortlabel) | 6 | | | |
+| AcI/NcI (als Wortlabel) | 4 | | | |
 | Genitivobjekt | 3 | | | |
-| Partizipialkonstruktion (als Wortlabel) | 1 | | | |
 
-Die Genitiv-Unterstreichung (`"u": true`) kommt bisher nur in „pro Caelio 26“ vor (18 Wörter).
-
----
-
-## 2. Widersprüche
-
-### 2.1 Regel 7 verlangt Klammern, die auf der Stufe „Anfänger“ nicht erlaubt sind
-
-Regel 7 (Z. 2234): Wer eine Subjunktion oder ein Relativpronomen erkennt, „MUSS zwingend“ eine entsprechende Gruppe erstellen. Regel 10 erlaubt aber nur die Labels der gewählten Stufe. Die Anfängerliste (Z. 982) enthält weder `Nebensatz`, `Relativsatz` noch `Subjunktion`. Beim Import werden Klammern mit unbekanntem Label auf „Sonstiges“ gesetzt (Z. 2399).
-
-Mit der neuen KI-Anbindung wird das noch sichtbarer: Dort erhält das Modell die erlaubten Labels als festes Schema und kann für Klammern auf Anfängerstufe gar kein Satz-Label ausgeben.
-
-Vorschlag: Eine feste Liste von Klammer-Labels, die auf allen Stufen gilt (`Nebensatz`, `Relativsatz`, `AcI/NcI`, `Partizipialkonstruktion`, `Ablativus absolutus`), getrennt von den Wort-Labels der Stufe. Alternativ Regel 7 für die Anfängerstufe streichen.
-
-### 2.2 `cum` wird immer als Präposition verschmolzen
-
-Die Präpositionsliste (Z. 940) enthält `cum`. Die Verschmelzungsregel (Z. 2287–2301) hängt jedes Wort aus dieser Liste an das folgende Wort und überschreibt das Label mit „Präpositionale Bestimmung“, auch wenn das Modell „Subjunktion“ gesagt hat. Aus „Cum Caesar venisset, …“ wird die Präpositionalphrase „Cum Caesar“.
-
-Dasselbe Risiko besteht bei adverbialem Gebrauch von `ante`, `post`, `contra`, `circum`, `super`, `prope`.
-
-Vorschlag (zwei Wege):
-
-- a) `cum` aus der Liste streichen. `cum` + Ablativ erkennt das Modell ohnehin und vergibt das Label direkt.
-- b) Nur verschmelzen, wenn das Modell beide Wörter bereits als „Präpositionale Bestimmung“ markiert hat. Die Liste dient dann nur noch der manuellen Erstellung, wo kein Modell beteiligt ist.
-
-### 2.3 Partizipien im Beispiel sind „Prädikat“ ohne Klammer
-
-Im Beispielsatz sind `sumptum` und `quaesitum` als „Prädikat“ markiert (elliptisch, „est“ fehlt), ohne Klammer „Partizipialkonstruktion“, obwohl Regel 7 solche Konstruktionen als Gruppen vorsieht. Für die Cicero-Stelle ist das vertretbar; das Modell verallgemeinert aber: Partizip → Prädikat.
-
-Vorschlag: Beispielsatz mit finiten Verben wählen oder den elliptischen Charakter im Beispiel kurz benennen.
+Die Genitiv-Unterstreichung (`"u": true`) kommt weiterhin nur in „pro Caelio 26“ vor (18 Wörter).
 
 ---
 
-## 3. Beobachtungen zum Label-Set (zur Entscheidung)
+## 2. Offene Widersprüche
 
-- **Mischung der Ebenen.** Die Liste vereint Kasus (`Ablativ`), Wortarten (`Adverb`, `Konjunktion`, `Subjunktion`, `Infinitiv`) und Satzglieder (`Subjekt`, Objekte, `Prädikativum`). Die 174 „Adverb“-Markierungen zeigen, dass das Label faktisch als „Adverbiale Bestimmung“ dient. Frage: Soll „Adverb“ in „Adverbiale Bestimmung“ umbenannt werden, und soll „Ablativ“ eine Funktion benennen (z. B. „Adverbiale Bestimmung (Abl.)“)?
-- **Fehlende Kategorien.** Es gibt kein `Prädikatsnomen`, keine `Apposition`, kein `Attribut`. Adjektivattribute werden laut Regel 8 mit dem Bezugswort zusammengefasst (konsistent), Appositionen bleiben unbestimmt.
-- **Synonymtabelle.** `normalizeLabel` kennt „Attribut“, „Apposition“, „Adverbiale“, „Objekt“ nicht; solche Ausgaben werden „Sonstiges“. Mit der KI-Anbindung ist das Modell ohnehin auf die erlaubten Labels festgelegt, die Tabelle greift also praktisch nicht mehr. Falls die Liste bleibt, wie sie ist, wären „Adverbiale“ → „Adverb“ und „Prädikatsnomen“ → „Prädikativum“ sinnvolle Ergänzungen.
-- **Abkürzungen.** „Prädikat“ und „Nebensatz“ werden nicht gekürzt (Z. 989) und sind unter kurzen Wörtern breiter als das Wort.
+### 2.1 Partizipien im Beispiel sind „Prädikat“ ohne Klammer
+
+Im Beispielsatz des Prompts ist `sumitur` als „Prädikat“ markiert, und in der früheren Fassung waren es die Partizipien `sumptum` und `quaesitum` (elliptisch, „est“ fehlt), ohne Klammer „Partizipialkonstruktion“, obwohl Regel 7 solche Konstruktionen als Gruppen vorsieht. Für die Cicero-Stelle ist das vertretbar; das Modell verallgemeinert aber gern: Partizip → Prädikat.
+
+Ihr neuer Beispielsatz („Aurum Metelli sumitur a Clodia …“) entschärft das bereits, weil er finite Formen verwendet. Es bleibt die Frage, ob der Prompt zusätzlich ein Beispiel für eine echte Partizipialkonstruktion mit Klammer enthalten soll — dann sieht das Modell einmal, wie eine solche Gruppe aussieht.
+
+Vorschlag: so lassen, bis sich zeigt, dass Partizipialkonstruktionen tatsächlich zu selten erkannt werden. Ein zusätzliches Beispiel verlängert jeden Aufruf.
+
+### 2.2 „Adverb“ in den alten Übungen, „Adverbiale Bestimmung“ in der Anwendung
+
+Sie haben das Label im Deutschen in „Adverbiale Bestimmung“ umbenannt. Die 15 bereits veröffentlichten Übungen wurden dabei nicht mit umbenannt: dort steht 182-mal „Adverb“, sowohl als hinterlegte Antwort als auch im Antwortmenü. Wer eine alte und eine neue Übung nacheinander bearbeitet, sieht für dieselbe Sache zwei Namen — genau die Uneinheitlichkeit, die die Umbenennung beseitigen sollte (wie zuvor bei „Verb“ / „Prädikat“).
+
+Vorschlag: Die deutschen Übungen mit umbenennen. Das ist derselbe rein mechanische Vorgang, der für „Verb“ → „Prädikat“ und „AcI“ → „AcI/NcI“ bereits durchgeführt und geprüft wurde: nur die Label-Namen werden ersetzt, Text und Analyse bleiben unangetastet. Die englische Beispielseite behält „Adverb“. Aufwand: wenige Minuten, danach werden alle Übungen erneut im Browser geprüft.
 
 ---
 
-## 4. Fragen zur Schülerseite (Produktentscheidungen)
+## 3. Beobachtungen zum Label-Set
 
-- **Prüfungsmodus ohne Ende.** Das Ergebnis erscheint nur, wenn alle Wortgruppen bestimmt *und* alle versteckten Genitivattribute markiert sind (Z. 776). Wer ein Genitivattribut nicht findet, bekommt weder Ergebnis noch Übersetzungsfeld noch einen Hinweis, was fehlt. Vorschlag: Button „Prüfung abgeben“, der nicht markierte Genitive als Fehler zählt, und/oder ein Hinweis „Es fehlen noch n Genitivattribute“.
-- **Asymmetrische Punkte.** Falsche Genitiv-Tipps ziehen Punkte ab (Z. 782), falsche Labels im Prüfungsmodus kosten nur den Punkt der Aufgabe. Ist das gewollt?
-- **Alle Palettenlabels im Antwortmenü.** Beim Export landen alle Labels der Palette im Menü der Schülerseite (Z. 2577, Z. 2662), auch unbenutzte Hilfslabels; in „pro Caelio 26“ stehen „1“ und „2“ zur Auswahl. Vorschlag: nur im Text verwendete Labels plus eine feste Menge an Ablenkern exportieren.
+Diese Punkte haben Sie bereits kommentiert; sie stehen hier nur noch als Zusammenfassung des Stands.
+
+- **Mischung der Ebenen.** Die Liste vereint Kasus (`Ablativ`), Wortarten (`Konjunktion`, `Subjunktion`, `Infinitiv`) und Satzglieder (`Subjekt`, Objekte, `Prädikativum`). „Adverb“ heißt jetzt „Adverbiale Bestimmung“, was der tatsächlichen Verwendung entspricht. Für `Ablativ` haben Sie entschieden, es vorerst so zu lassen, obwohl ein Ablativ streng genommen etwas anderes ist als eine adverbiale Bestimmung — offen, aber bewusst offen.
+- **Fehlende Kategorien.** Kein `Prädikatsnomen`, keine `Apposition`, kein `Attribut`. Das ist beabsichtigt: Ziel ist, dass Lernende Wortgruppen und Hierarchien erkennen, nicht jedes Wort einzeln bestimmen; zu viele Labels würden davon ablenken.
+- **Synonymtabelle.** „adverbiale“ und „Prädikatsnomen“ sind ergänzt. Mit der KI-Anbindung ist das Modell ohnehin auf die erlaubten Labels festgelegt, die Tabelle greift also nur noch für importierte Fremd-Ausgaben.
+- **Abkürzungen.** „Nebensatz“ wird jetzt als „N.satz“ gekürzt. „Prädikat“ bleibt bewusst ungekürzt, um es nicht mit „Präd“ für „Prädikativum“ zu verwechseln.
+
+---
+
+## 4. Frage zur Schülerseite
+
+- **Alle Palettenlabels im Antwortmenü.** Beim Export landen alle Labels der Palette im Menü der Schülerseite, auch unbenutzte Hilfslabels; in „pro Caelio 26“ stehen deshalb „1“ und „2“ zur Auswahl. Vorschlag: nur die im Text tatsächlich verwendeten Labels exportieren, plus eine feste Menge an Ablenkern, damit die Auswahl nicht die Lösung verrät.
+
+Die beiden anderen Fragen dieses Abschnitts (Prüfungsmodus ohne Ende, asymmetrische Punktevergabe) haben Sie mit dem Knopf „Prüfung abgeben“ und der neuen Punktzählung gelöst; siehe Abschnitt 5.
 
 ---
 
 ## 5. Bereits umgesetzt
 
-Diese Punkte waren eindeutige Fehler oder reine Vereinheitlichungen und sind bereits geändert; die grammatischen Entscheidungen der Abschnitte 2 bis 4 sind davon unberührt.
+### Von Ihnen entschieden und umgesetzt (6. September)
 
-- **„Genitivattribut“ ist kein Label mehr.** Farbe und Abkürzung sind entfernt; gibt das Modell trotzdem „Genitivattribut“ aus, wird daraus ausdrücklich „Sonstiges“. Genitivattribute werden weiterhin über die Markierung `"u": true` am Wort ausgezeichnet, wie Regel 8 es vorsieht.
-- **Deutscher und englischer Prompt sind deckungsgleich.** Regel 4 nennt in beiden Sprachen dieselben Konjunktionen, Regel 7 dieselben Konstruktionen, Regel 8 erklärt die Markierung in beiden Sprachen mit dem Beispiel „amor patriae“ und stellt klar, dass ein Genitivattribut kein eigenes Label und keine Klammer bekommt. Ein Test hält die Parität fest.
-- **Einheitliche Labelnamen.** „Verb“ heißt jetzt überall „Prädikat“, „AcI“ und „Accusative with infinitive“ heißen „AcI/NcI“. Die 15 veröffentlichten Übungen wurden entsprechend umgeschrieben; alte Namen werden beim Import weiterhin erkannt. Die Tastenkürzel-Tabelle nennt keine veralteten Labels mehr.
-- **Prompt-Beispiel korrigiert.** Das Beispiel in Regel 9 hatte `Clodiae` (ein Dativobjekt) mit `"u": true` markiert, obwohl Regel 8 dieses Kennzeichen für Genitivattribute reserviert; die Markierung ist entfernt, und Regel 8 zeigt jetzt ein echtes Beispiel („amor patriae“). Ein Testlauf hatte gezeigt, dass das Modell den Fehler aus dem Beispiel übernahm.
-- **Enklitika nur mit Bindestrich.** Bisher wurde jedes alleinstehende „ne“ oder „ve“ an das vorhergehende Wort geklebt („Timeo ne veniat“ → „Timeone veniat“). Jetzt gilt die Regel nur für „-que“, „-ne“, „-ve“ mit Bindestrich.
-- **Keine doppelte Präpositionsverschmelzung.** Ein Token, das schon eine Phrase ist („a Clodia“, wie im Prompt-Beispiel vorgegeben), wurde erneut mit dem Folgewort verschmolzen („in foro Romae ambulabat“ als eine Präpositionalphrase, samt falscher Genitiv-Unterstreichung). Jetzt werden nur einzelne Wörter aus der Präpositionsliste verschmolzen.
+- **Feste Klammer-Labels für alle Stufen.** `Nebensatz`, `Relativsatz`, `AcI/NcI`, `Partizipialkonstruktion` und `Ablativus absolutus` gelten jetzt unabhängig vom gewählten Niveau. Der Prompt nennt sie getrennt von den Wort-Labels, der Import akzeptiert sie, und sie erscheinen in der Palette und im Antwortmenü der Schülerseite. Damit verliert eine Anfänger-Übung ihre korrekt beschriftete Klammer nicht mehr an „Sonstiges“.
+- **`cum` ist aus der Präpositionsliste entfernt.** Aus „Cum Caesar venisset …“ wird keine Präpositionalphrase mehr; das Wort behält das Label, das das Modell vergibt („Subjunktion“), und die Nebensatz-Klammer entsteht wie vorgesehen.
+- **„Adverb“ heißt im Deutschen „Adverbiale Bestimmung“**, „Nebensatz“ wird „N.satz“ abgekürzt, und `normalizeLabel` kennt „adverbiale“ und „Prädikatsnomen“.
+- **Neues Prompt-Beispiel.** „Aurum Metelli sumitur a Clodia, venenum quaeritur quod Clodiae daretur.“ zeigt die Genitiv-Markierung an einem echten Genitivattribut (`Metelli`) und lässt das Dativobjekt `Clodiae` unmarkiert.
+- **Rettung falsch gelabelter Genitivattribute.** Gibt das Modell trotz Regel 8 „Genitivattribut“ als Funktionslabel aus, übernimmt das Wort jetzt das Label seines Bezugsworts und behält die Unterstreichung, statt zu „Sonstiges“ zu werden.
+- **Prüfungsmodus.** Knopf „Prüfung abgeben“: offene Wortgruppen werden aufgelöst und als Fehler gewertet, nicht gefundene Genitivattribute werden hervorgehoben, das Übersetzungsfeld erscheint, das Ergebnis wird berechnet. Genitivattribute zählen jetzt wie jede andere Aufgabe einen Punkt; falsche Versuche beim Suchen kosten keine Punkte mehr.
 
-Die Präpositionsliste und die Label-Listen selbst sind unverändert; die offenen Fragen der Abschnitte 2 bis 4 warten auf Ihre Entscheidung.
+### Beim Zusammenführen korrigiert
+
+- Ihre Genitiv-Rettung prüfte das bereits normalisierte Label; in der API-Fassung wird „Genitivattribut“ vorher zu „Sonstiges“, deshalb prüft sie jetzt die Roh-Antwort der KI.
+- Im deutschen Beispiel stand `quaesitum`, im Beispielsatz aber `quaeritur`. Korrigiert; ein Test vergleicht jetzt Beispielsatz und Beispielanalyse Wort für Wort.
+- Das englische „Adverb“ hatte durch die Umbenennung seine Farbe verloren und hat sie wieder.
+
+### Vorher als Programmfehler behoben
+
+- **„Genitivattribut“ ist kein halbes Label mehr.** Farbe und Abkürzung sind entfernt; ein Genitivattribut wird ausschließlich über `"u": true` am Wort ausgezeichnet, wie Regel 8 es vorsieht.
+- **Deutscher und englischer Prompt sind deckungsgleich.** Gleiche zehn Regeln, gleiche Beispiel-Konjunktionen in Regel 4, gleiche Klammer-Labels in Regel 7 und 10, gleiche Erklärung der Genitiv-Markierung in Regel 8. Ein Test hält die Parität fest.
+- **Einheitliche Labelnamen.** „Verb“ heißt überall „Prädikat“, „AcI“ und „Accusative with infinitive“ heißen „AcI/NcI“; die veröffentlichten Übungen wurden entsprechend umgeschrieben, alte Namen werden beim Import weiterhin erkannt.
+- **Enklitika nur mit Bindestrich.** Ein alleinstehendes „ne“ wird nicht mehr an das vorhergehende Wort geklebt („Timeo ne veniat“ blieb „Timeone veniat“).
+- **Keine doppelte Präpositionsverschmelzung.** Ein Token, das schon eine Phrase ist („a Clodia“), wird nicht erneut mit dem Folgewort verschmolzen.
+- **Vollständigkeitsprüfung.** Vor dem Import wird geprüft, ob die Antwort der KI jedes Wort des Textes enthält; fehlende, veränderte oder erfundene Wörter werden benannt.
