@@ -105,7 +105,7 @@
     // Names used in exercises exported by earlier versions of the tool, mapped onto today's labels.
     const LEGACY = {
         en: { 'Accusative with infinitive': 'Accusative/Nominative with infinitive', 'AcI': 'Accusative/Nominative with infinitive' },
-        de: { 'Verb': 'Prädikat', 'AcI': 'AcI/NcI', 'Accusative with infinitive': 'AcI/NcI' }
+        de: { 'Verb': 'Prädikat', 'AcI': 'AcI/NcI', 'Accusative with infinitive': 'AcI/NcI', 'Adverb': 'Adverbiale Bestimmung' }
     };
 
     const lower = (s) => String(s == null ? '' : s).trim().toLowerCase();

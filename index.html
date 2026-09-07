@@ -2613,7 +2613,16 @@ function exportToStudent() {
 const baseText = AppState.words.slice(0, 10).map(w => w.w).join('');
 const exerciseId = generateStableId(titleInput + baseText);
     
-    const blob = new Blob([generateStudentHTML(merged, updatedGroups, titleInput, AppState.functions, imgUrl, teacherNotes, AppState.lang, CONFIG.ABBREVIATIONS, CONFIG.PRESETS, exerciseId, STUDENT_PAGE_CSS, STUDENT_PAGE_JS)], {type: 'text/html'});
+    // The student's answer menu offers the standard labels of this level plus the fixed clause labels, and any
+    // extra label the teacher actually used. Scratch labels that were added but never used are left out, so the
+    // menu neither gives the answer away nor puts stray entries like "1" and "2" in front of the class.
+    const usedLabels = new Set();
+    merged.forEach(m => { if (m.f && m.f !== CONFIG.PUNCT) usedLabels.add(m.f); });
+    updatedGroups.forEach(g => { if (g.label) usedLabels.add(g.label); });
+    const standardLabels = CONFIG.PRESETS[AppState.lang][AppState.level].concat(CONFIG.GROUP_LABELS[AppState.lang]);
+    const exportLabels = AppState.functions.filter(l => standardLabels.indexOf(l) !== -1 || usedLabels.has(l));
+
+    const blob = new Blob([generateStudentHTML(merged, updatedGroups, titleInput, exportLabels, imgUrl, teacherNotes, AppState.lang, CONFIG.ABBREVIATIONS, CONFIG.PRESETS, exerciseId, STUDENT_PAGE_CSS, STUDENT_PAGE_JS)], {type: 'text/html'});
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; a.click();
 }
 

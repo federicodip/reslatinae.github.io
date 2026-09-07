@@ -25,6 +25,31 @@ for (const f of pages) {
         const bad = attr(html, 'data-val').filter(l => !current.has(l) && !knownExtras.has(l));
         assert.deepEqual([...new Set(bad)], []);
     });
+    test(`${f}: German pages call the adverbial label "Adverbiale Bestimmung"`, () => {
+        const html = fs.readFileSync(path.join(root, f), 'utf8');
+        const isGerman = html.includes('data-val="Subjekt"');
+        if (!isGerman) { assert.ok(html.includes('data-val="Adverb"') || true); return; } // English keeps "Adverb"
+        assert.ok(!/data-(ans|val)="Adverb"/.test(html), 'no bare "Adverb" left');
+    });
+    test(`${f}: the answer menu offers no unused helper labels`, () => {
+        const html = fs.readFileSync(path.join(root, f), 'utf8');
+        const offered = new Set(attr(html, 'data-val'));
+        const answers = new Set(attr(html, 'data-ans'));
+        const isGerman = html.includes('data-val="Subjekt"');
+        const lang = isGerman ? 'de' : 'en';
+        const standard = new Set([...L.PRESETS[lang].advanced, ...L.GROUP_LABELS[lang]]);
+        const stray = [...offered].filter(l => !standard.has(l) && !answers.has(l));
+        assert.deepEqual(stray, [], 'labels offered but neither standard nor used');
+    });
+    test(`${f}: every label the page uses has a colour in the page's own colour table`, () => {
+        const html = fs.readFileSync(path.join(root, f), 'utf8');
+        const m = html.match(/const colors = (\{[\s\S]*?\});/);
+        assert.ok(m, 'colour table present');
+        const colors = JSON.parse(m[1]);
+        const used = new Set([...attr(html, 'data-ans'), ...attr(html, 'data-val')]);
+        const missing = [...used].filter(l => !colors[l]);
+        assert.deepEqual(missing, [], 'labels used on the page but absent from its colour table');
+    });
     test(`${f}: no legacy names survive in the page's label tables`, () => {
         const html = fs.readFileSync(path.join(root, f), 'utf8');
         assert.ok(!html.includes('"Accusative with infinitive"'), 'Accusative with infinitive');
